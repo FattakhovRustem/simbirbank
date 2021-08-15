@@ -1,0 +1,24 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: createTable-account
+      author: Fattakhov Rustem
+      changes:
+        - createTable:
+            tableName: account
+            columns:
+              - column: {name: id, type: INT, autoIncrement: true, constraints: {nullable: false, primaryKey: true, primaryKeyName: account_pkey}}
+              - column: {name: number, type: INT}
+              - column: {name: balance, type: BIGINT}
+
+  - changeSet:
+      id: createTable-detail
+      author: Fattakhov Rustem
+      changes:
+        - createTable:
+            tableName: detail
+            columns:
+              - column: {name: id, type: INT, autoIncrement: true, constraints: {nullable: false, primaryKey: true, primaryKeyName: detail_pkey}}
+              - column: {name: date, type: TIMESTAMP WITH TIME ZONE, defaultValueComputed: now()}
+              - column: {name: account_id, type: INT, constraints: {nullable: false, foreignKeyName: detaild_account_fkey, references: account(id)}}
+              - column: {name: transaction, type: BIGINT}
