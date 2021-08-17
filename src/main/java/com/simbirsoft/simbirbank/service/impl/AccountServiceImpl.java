@@ -2,13 +2,14 @@ package com.simbirsoft.simbirbank.service.impl;
 
 import com.simbirsoft.simbirbank.entity.Account;
 import com.simbirsoft.simbirbank.entity.Detail;
+import com.simbirsoft.simbirbank.exception.NoAccountException;
+import com.simbirsoft.simbirbank.exception.NoMoneyException;
 import com.simbirsoft.simbirbank.repository.AccountRepository;
 import com.simbirsoft.simbirbank.repository.DetailRepository;
 import com.simbirsoft.simbirbank.rest.dto.AccountResponseDto;
 import com.simbirsoft.simbirbank.rest.dto.DetailRequestDto;
 import com.simbirsoft.simbirbank.rest.dto.DetailResponseDto;
 import com.simbirsoft.simbirbank.service.AccountService;
-import liquibase.pro.packaged.D;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,21 +28,25 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountResponseDto getBalance(Integer number) {
-        Account account = accountRepository.findByNumber(number).get();
-        AccountResponseDto responseDto = new AccountResponseDto(number, account.getBalance());
-        return responseDto;
+        Account account = accountRepository.findByNumber(number).orElseThrow(() -> new NoAccountException(String.format("Account number = %d not found", number)));
+        return new AccountResponseDto(number, account.getBalance());
     }
 
     @Override
     public List<DetailResponseDto> getDetail(Integer number) {
-        Account account = accountRepository.findByNumber(number).get();
+        Account account = accountRepository.findByNumber(number).orElseThrow(() -> new NoAccountException(String.format("Account number = %d not found", number)));
         List<Detail> list = detailRepository.findByAccount(account);
         return list.stream().map((d) -> new DetailResponseDto(d.getTransaction(), d.getDate())).collect(Collectors.toList());
     }
 
     @Override
     public AccountResponseDto makeOperation(Integer number, DetailRequestDto requestDto) {
-        Account account = accountRepository.findByNumber(number).get();
+        Account account = accountRepository.findByNumber(number).orElseThrow(() -> new NoAccountException(String.format("Account number = %d not found", number)));
+
+        if (account.getBalance() < requestDto.getTransaction()) {
+            throw new NoMoneyException(String.format("Client with number %d has not money", number));
+        }
+
         account.setBalance(account.getBalance() + requestDto.getTransaction());
         accountRepository.save(account);
 
@@ -50,7 +55,6 @@ public class AccountServiceImpl implements AccountService {
         detail.setTransaction(requestDto.getTransaction());
         detailRepository.save(detail);
 
-        AccountResponseDto responseDto = new AccountResponseDto(number, account.getBalance());
-        return responseDto;
+        return new AccountResponseDto(number, account.getBalance());
     }
 }
