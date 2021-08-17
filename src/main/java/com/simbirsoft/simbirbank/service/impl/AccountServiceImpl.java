@@ -27,21 +27,21 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountResponseDto getBalance(Integer number) {
-        Account account = accountRepository.findById(number).get();
+        Account account = accountRepository.findByNumber(number).get();
         AccountResponseDto responseDto = new AccountResponseDto(number, account.getBalance());
         return responseDto;
     }
 
     @Override
     public List<DetailResponseDto> getDetail(Integer number) {
-        Account account = accountRepository.findById(number).get();
+        Account account = accountRepository.findByNumber(number).get();
         List<Detail> list = detailRepository.findByAccount(account);
         return list.stream().map((d) -> new DetailResponseDto(d.getTransaction(), d.getDate())).collect(Collectors.toList());
     }
 
     @Override
     public AccountResponseDto makeOperation(Integer number, DetailRequestDto requestDto) {
-        Account account = accountRepository.findById(number).get();
+        Account account = accountRepository.findByNumber(number).get();
         account.setBalance(account.getBalance() + requestDto.getTransaction());
         accountRepository.save(account);
 
