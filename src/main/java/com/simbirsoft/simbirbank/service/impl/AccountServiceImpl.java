@@ -11,6 +11,7 @@ import com.simbirsoft.simbirbank.rest.dto.DetailRequestDto;
 import com.simbirsoft.simbirbank.rest.dto.DetailResponseDto;
 import com.simbirsoft.simbirbank.service.AccountService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,12 +27,14 @@ public class AccountServiceImpl implements AccountService {
         this.detailRepository = detailRepository;
     }
 
+    @Transactional
     @Override
     public AccountResponseDto getBalance(Integer number) {
         Account account = accountRepository.findByNumber(number).orElseThrow(() -> new NoAccountException(String.format("Account number = %d not found", number)));
         return new AccountResponseDto(number, account.getBalance());
     }
 
+    @Transactional
     @Override
     public List<DetailResponseDto> getDetail(Integer number) {
         Account account = accountRepository.findByNumber(number).orElseThrow(() -> new NoAccountException(String.format("Account number = %d not found", number)));
@@ -39,6 +42,7 @@ public class AccountServiceImpl implements AccountService {
         return list.stream().map((d) -> new DetailResponseDto(d.getTransaction(), d.getDate())).collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public AccountResponseDto makeOperation(Integer number, DetailRequestDto requestDto) {
         Account account = accountRepository.findByNumber(number).orElseThrow(() -> new NoAccountException(String.format("Account number = %d not found", number)));
